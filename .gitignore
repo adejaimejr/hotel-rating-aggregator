@@ -90,10 +90,10 @@ venv.bak/
 
 # Results and outputs
 resultados/
-*.json
+#*.json
 
 # Configuration with sensitive data
-config.env
+#config.env
 
 # Spyder project settings
 .spyderproject
