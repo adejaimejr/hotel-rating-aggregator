@@ -290,8 +290,7 @@ python main.py --status
 
 ## 👨‍💻 Developer
 
-**Adejaime Junior - Desenvolvimento - adejaimejr**  
-⌨️ **Desenvolvido com ❤️ por i92Tech**
+**Developed by [Adejaime Junior](https://github.com/adejaimejr) | i92Tech**
 
 ---
 
