@@ -1,0 +1,1 @@
+# Pacote de scrapers para múltiplos sites de hotéis 
