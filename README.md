@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
+> 🇧🇷 **Versão em Português**: [README-pt.md](README-pt.md)
+
 Enterprise-grade multi-platform hotel rating aggregation system with real-time data extraction from TripAdvisor, Booking.com, and Decolar. A scalable solution for hospitality data intelligence and competitive analysis.
 
 ## 🎯 Overview
@@ -305,6 +307,11 @@ python main.py --status
 
 # Submit pull request
 ```
+
+## 🌍 README Versions
+
+- **🇺🇸 English**: README.md (this file)
+- **🇧🇷 Português**: [README-pt.md](README-pt.md)
 
 ---
 

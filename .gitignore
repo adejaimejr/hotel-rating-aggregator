@@ -88,6 +88,13 @@ ENV/
 env.bak/
 venv.bak/
 
+# Results and outputs
+resultados/
+*.json
+
+# Configuration with sensitive data
+config.env
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -125,13 +132,6 @@ payload-*.md
 teste_*.py
 *.bak
 *.tmp
-
-# Configuration with sensitive data
-config.env
-
-# Results and outputs
-resultados/
-*.json
 
 # Scraping artifacts
 debug_*
