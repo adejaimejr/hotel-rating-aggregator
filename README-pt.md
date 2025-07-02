@@ -200,29 +200,6 @@ Copie `config.env-EXEMPLO` para `config.env` e configure:
 - **Eficiência de Memória**: Gerenciamento otimizado de recursos
 - **Timestamping Preciso**: Controle temporal
 
-## 🔄 Processo de Desenvolvimento
-
-### 1. Análise de Requisições
-- Captura de payloads reais via DevTools
-- Engenharia reversa de APIs privadas (TripAdvisor GraphQL)
-- Análise de estruturas HTML (Booking.com)
-- Mapeamento de APIs de tracking (Booking.com)
-
-### 2. Implementação Modular
-- Scrapers independentes por plataforma
-- Interfaces padronizadas
-- Configuração centralizada (64 variáveis)
-
-### 3. Testes e Validação
-- Teste individual por scraper
-- Validação cruzada de dados
-- Benchmarking de performance
-
-### 4. Deploy e Monitoramento
-- Sistema de logging detalhado
-- Métricas de sucesso/falha
-- Outputs com timestamp
-
 ## 📈 Métricas de Performance
 
 - **Taxa de Sucesso**: 100% (com fallback inteligente)
@@ -278,12 +255,8 @@ Este sistema foi desenvolvido com foco em:
 
 ### Próximas Implementações
 - [ ] **Google Travel**: Finalizar implementação
-- [ ] **Machine Learning**: Análise preditiva de ratings
-- [ ] **Dashboard**: Interface web para visualização
 - [ ] **API REST**: Endpoint para integração
 - [ ] **Docker**: Containerização do sistema
-- [ ] **Monitoramento em Tempo Real**: Streaming de dados ao vivo
-- [ ] **Suporte Multi-idiomas**: Expansão internacional
 
 ## 📄 Licença
 
@@ -312,6 +285,13 @@ python main.py --status
 
 - **🇧🇷 Português**: README-pt.md (este arquivo)
 - **🇺🇸 English**: [README.md](README.md)
+
+---
+
+## 👨‍💻 Desenvolvedor
+
+**Adejaime Junior - Desenvolvimento - adejaimejr**  
+⌨️ **Desenvolvido com ❤️ por i92Tech**
 
 ---
 

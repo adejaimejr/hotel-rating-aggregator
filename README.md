@@ -200,29 +200,6 @@ Copy `config.env-EXEMPLO` to `config.env` and configure:
 - **Memory Efficient**: Optimized resource management
 - **Precise Timestamping**: Temporal control
 
-## 🔄 Development Process
-
-### 1. Request Analysis
-- Real payload capture via DevTools
-- Private API reverse engineering (TripAdvisor GraphQL)
-- HTML structure analysis (Booking.com)
-- Tracking API mapping (Booking.com)
-
-### 2. Modular Implementation
-- Independent scrapers per platform
-- Standardized interfaces
-- Centralized configuration (64 variables)
-
-### 3. Testing & Validation
-- Individual scraper testing
-- Cross-validation of data
-- Performance benchmarking
-
-### 4. Deployment & Monitoring
-- Detailed logging system
-- Success/failure metrics
-- Timestamped outputs
-
 ## 📈 Performance Metrics
 
 - **Success Rate**: 100% (with intelligent fallback)
@@ -278,12 +255,8 @@ This system was developed with focus on:
 
 ### Upcoming Implementations
 - [ ] **Google Travel**: Finalize implementation
-- [ ] **Machine Learning**: Predictive rating analysis
-- [ ] **Dashboard**: Web interface for visualization
 - [ ] **REST API**: Integration endpoint
 - [ ] **Docker**: System containerization
-- [ ] **Real-time Monitoring**: Live data streaming
-- [ ] **Multi-language Support**: International expansion
 
 ## 📄 License
 
@@ -312,6 +285,13 @@ python main.py --status
 
 - **🇺🇸 English**: README.md (this file)
 - **🇧🇷 Português**: [README-pt.md](README-pt.md)
+
+---
+
+## 👨‍💻 Developer
+
+**Adejaime Junior - Desenvolvimento - adejaimejr**  
+⌨️ **Desenvolvido com ❤️ por i92Tech**
 
 ---
 
