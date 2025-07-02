@@ -25,6 +25,9 @@ from sites.booking.scraper import BookingScraper
 from sites.google.scraper import GoogleTravelScraper
 from sites.decolar.scraper import DecolarScraper
 
+# Importar consolidador
+from consolidador import DataConsolidator
+
 
 class HotelScrapingOrchestrator:
     """Orquestrador principal do sistema de scraping multi-sites"""
@@ -85,10 +88,19 @@ class HotelScrapingOrchestrator:
         hotels_config = {}
         site_upper = site.upper()
         
+        # Configurações técnicas que devem ser ignoradas
+        excluded_keys = {
+            'GOOGLE_API_KEY', 'GOOGLE_SERVICE_ACCOUNT_JSON', 
+            'GOOGLE_API_TIMEOUT', 'GOOGLE_API_DELAY'
+        }
+        
         # Busca dinamicamente todos os hotéis configurados para o site
         # Padrão: SITE_HOTEL_NAME=url
         for key, value in self.config.items():
-            if key.startswith(f"{site_upper}_") and not key.endswith("_ID"):
+            if (key.startswith(f"{site_upper}_") and 
+                not key.endswith("_ID") and 
+                key not in excluded_keys):
+                
                 # Extrai o nome do hotel da chave de configuração
                 hotel_key = key.replace(f"{site_upper}_", "")
                 
@@ -236,7 +248,52 @@ class HotelScrapingOrchestrator:
                 print(f"❌ Erro ao processar {site}: {e}")
                 continue
         
+        # Consolida automaticamente os dados após scraping
+        if results:
+            consolidated_file = self.consolidate_data()
+            # Remove arquivos individuais, mantém apenas o consolidado
+            if consolidated_file:
+                self._cleanup_individual_files(results)
+        
         return results
+    
+    def consolidate_data(self) -> Optional[str]:
+        """
+        Gera JSON consolidado com dados normalizados de todos os sites
+        
+        Returns:
+            Caminho do arquivo consolidado ou None se erro
+        """
+        print(f"\n🔄 INICIANDO CONSOLIDAÇÃO DE DADOS")
+        print("=" * 60)
+        
+        try:
+            consolidator = DataConsolidator()
+            consolidated_file = consolidator.generate_consolidated_json()
+            
+            if consolidated_file:
+                print(f"✅ Consolidação concluída: {consolidated_file}")
+                return consolidated_file
+            else:
+                print("❌ Erro na consolidação")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Erro durante consolidação: {e}")
+            return None
+    
+    def _cleanup_individual_files(self, results: Dict[str, str]) -> None:
+        """Remove arquivos individuais após consolidação"""
+        import os
+        
+        print("🧹 Limpando arquivos individuais...")
+        for site, file_path in results.items():
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    print(f"   ❌ Removido: {file_path}")
+            except Exception as e:
+                print(f"   ⚠️ Erro ao remover {file_path}: {e}")
     
     def show_status(self):
         """Mostra status das configurações e scrapers"""
@@ -268,10 +325,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemplos de uso:
-  python main.py                    # Executa todos os sites
+  python main.py                    # Executa todos os sites + consolidação
   python main.py --site tripadvisor # Executa apenas TripAdvisor
   python main.py --status           # Mostra status do sistema
   python main.py --sites booking decolar # Executa sites específicos
+  python main.py --consolidar       # Gera apenas JSON consolidado
         """
     )
     
@@ -300,6 +358,12 @@ Exemplos de uso:
         help='Caminho para arquivo de configuração (padrão: config.env)'
     )
     
+    parser.add_argument(
+        '--consolidar',
+        action='store_true',
+        help='Gera apenas JSON consolidado a partir dos dados existentes'
+    )
+    
     args = parser.parse_args()
     
     # Inicializa orquestrador
@@ -308,6 +372,12 @@ Exemplos de uso:
     # Executa ação solicitada
     if args.status:
         orchestrator.show_status()
+        
+    elif args.consolidar:
+        # Consolida dados existentes
+        consolidated_file = orchestrator.consolidate_data()
+        if consolidated_file:
+            print(f"\n🎯 Arquivo consolidado gerado: {consolidated_file}")
         
     elif args.site:
         # Executa site específico
