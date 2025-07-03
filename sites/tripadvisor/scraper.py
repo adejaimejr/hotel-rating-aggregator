@@ -1,9 +1,8 @@
 """
-TripAdvisor Scraper - Estilo Original Que Funcionava
-===================================================
+TripAdvisor Scraper
+===================
 
-Baseado no payload original capturado do navegador que estava funcionando.
-Abordagem simples e direta sem complicações.
+Scraper baseado em GraphQL API do TripAdvisor.
 """
 
 import json
@@ -18,15 +17,14 @@ import requests
 
 
 class TripAdvisorScraper:
-    """Scraper TripAdvisor - Estilo original simples que funcionava"""
+    """Scraper TripAdvisor via GraphQL API"""
     
     def __init__(self):
-        """Inicializa o scraper com configurações funcionais"""
         self.base_url = "https://www.tripadvisor.com.br/data/graphql/ids"
         self.timeout = 15
         
     def _get_real_headers(self) -> Dict[str, str]:
-        """Headers reais capturados do navegador que funcionavam"""
+        """Headers reais capturados do navegador"""
         return {
             'accept': '*/*',
             'accept-language': 'pt-BR,pt;q=0.9',
@@ -59,11 +57,10 @@ class TripAdvisorScraper:
         }
     
     def _build_payload_for_hotel(self, hotel_id: int) -> List[Dict]:
-        """Constrói payload baseado no original que funcionava"""
+        """Constrói payload GraphQL para o hotel"""
         session_id = secrets.token_hex(16).upper()
         page_uid = f"{secrets.token_hex(4)}-{secrets.token_hex(2)}-{secrets.token_hex(2)}-{secrets.token_hex(2)}-{secrets.token_hex(6)}"
         
-        # Payload original adaptado para qualquer hotel
         return [
             {
                 "variables": {"page": "Hotel_Review", "platform": "mobileweb"},
@@ -78,7 +75,7 @@ class TripAdvisorScraper:
                     "deviceType": "MOBILE",
                     "trafficSource": "ba",
                     "locationId": hotel_id,
-                    "geoId": 644400,  # Alagoas geo ID
+                    "geoId": 644400,
                     "servletName": "Hotel_Review",
                     "hotelTravelInfo": None,
                     "language": "pt",
@@ -119,9 +116,8 @@ class TripAdvisorScraper:
         ]
     
     def _extract_rating_data(self, response_data: List[Dict]) -> Optional[Dict]:
-        """Extrai dados de rating da resposta - estilo original"""
+        """Extrai dados de rating da resposta GraphQL"""
         try:
-            # Procura por reviewSummaryInfo nos resultados
             for result in response_data:
                 if 'data' in result:
                     data = result['data']
@@ -160,65 +156,58 @@ class TripAdvisorScraper:
                                     'source': 'locations'
                                 }
             
-            print("❌ Nenhuma estrutura de dados reconhecida encontrada")
+            print("Nenhuma estrutura de dados reconhecida encontrada")
             return None
             
         except Exception as e:
-            print(f"❌ Erro ao extrair dados: {e}")
+            print(f"Erro ao extrair dados: {e}")
             return None
     
     def scrape_hotel(self, hotel_url: str, hotel_name: str) -> Optional[Dict[str, Any]]:
-        """Scrapa dados de um hotel - estilo original simples"""
-        print(f"\n🎯 Extraindo: {hotel_name}")
+        """Scrapa dados de um hotel específico"""
+        print(f"\nExtraindo: {hotel_name}")
         
-        # Extrai ID do hotel da URL
         hotel_id = self._extract_hotel_id(hotel_url)
         if not hotel_id:
-            print(f"❌ ID não encontrado na URL: {hotel_url}")
+            print(f"ID não encontrado na URL: {hotel_url}")
             return None
         
-        print(f"📋 Hotel ID: {hotel_id}")
+        print(f"Hotel ID: {hotel_id}")
         
-        # Cria sessão nova
         session = requests.Session()
         session.headers.update(self._get_real_headers())
         session.cookies.update(self._get_real_cookies())
         
         try:
-            # Payload baseado no original
             payload = self._build_payload_for_hotel(int(hotel_id))
             
-            print(f"📡 Fazendo requisição para TripAdvisor...")
+            print(f"Fazendo requisição para TripAdvisor...")
             
-            # Faz a requisição
             response = session.post(
                 self.base_url,
                 json=payload,
                 timeout=self.timeout
             )
             
-            print(f"📊 Status: {response.status_code}")
+            print(f"Status: {response.status_code}")
             
             if response.status_code == 200:
-                # Debug do tipo de conteúdo
                 content_type = response.headers.get('content-type', 'unknown')
                 content_encoding = response.headers.get('content-encoding', 'none')
-                print(f"📋 Content-Type: {content_type}")
-                print(f"📋 Content-Encoding: {content_encoding}")
+                print(f"Content-Type: {content_type}")
+                print(f"Content-Encoding: {content_encoding}")
                 
                 try:
-                    # Força a descompressão se necessário
                     if content_encoding and content_encoding != 'none':
-                        print(f"🔄 Descomprimindo conteúdo ({content_encoding})...")
+                        print(f"Descomprimindo conteúdo ({content_encoding})...")
                     
                     response_data = response.json()
-                    print(f"✅ JSON válido recebido ({len(response_data)} items)")
+                    print(f"JSON válido recebido ({len(response_data)} items)")
                     
-                    # Extrai dados de rating
                     rating_data = self._extract_rating_data(response_data)
                     
                     if rating_data:
-                        print(f"✅ Dados extraídos: Rating {rating_data['rating']}/5.0, {rating_data['review_count']} avaliações")
+                        print(f"Dados extraídos: Rating {rating_data['rating']}/5.0, {rating_data['review_count']} avaliações")
                         
                         return {
                             "hotel_id": hotel_id,
@@ -229,36 +218,31 @@ class TripAdvisorScraper:
                             "source": "tripadvisor_realtime",
                             "data_source": rating_data['source'],
                             "extraction_timestamp": datetime.now().isoformat(),
-                            "reviews": []  # Pode ser expandido depois
+                            "reviews": []
                         }
                     else:
-                        print("❌ Dados de rating não encontrados na resposta")
-                        # Debug: salva resposta para análise
+                        print("Dados de rating não encontrados na resposta")
                         with open(f"debug_response_{hotel_id}.json", "w") as f:
                             json.dump(response_data, f, indent=2)
-                        print(f"💾 Resposta salva em debug_response_{hotel_id}.json")
+                        print(f"Resposta salva em debug_response_{hotel_id}.json")
                         
                 except json.JSONDecodeError as e:
-                    print(f"❌ Erro ao decodificar JSON: {e}")
-                    # Debug melhorado
-                    print(f"📋 Response length: {len(response.content)} bytes")
-                    print(f"📋 Response text length: {len(response.text)} chars")
+                    print(f"Erro ao decodificar JSON: {e}")
+                    print(f"Response length: {len(response.content)} bytes")
+                    print(f"Response text length: {len(response.text)} chars")
                     
-                    # Tenta descomprimir manualmente
-                    print("🔄 Tentando descompressão manual...")
+                    print("Tentando descompressão manual...")
                     try:
                         decompressed_text = self._try_decompress_content(response.content)
-                        print(f"✅ Descompressão bem-sucedida! ({len(decompressed_text)} chars)")
+                        print(f"Descompressão bem-sucedida! ({len(decompressed_text)} chars)")
                         
-                        # Tenta fazer JSON com o conteúdo descomprimido
                         response_data = json.loads(decompressed_text)
-                        print(f"✅ JSON válido após descompressão ({len(response_data)} items)")
+                        print(f"JSON válido após descompressão ({len(response_data)} items)")
                         
-                        # Extrai dados de rating
                         rating_data = self._extract_rating_data(response_data)
                         
                         if rating_data:
-                            print(f"✅ Dados extraídos: Rating {rating_data['rating']}/5.0, {rating_data['review_count']} avaliações")
+                            print(f"Dados extraídos: Rating {rating_data['rating']}/5.0, {rating_data['review_count']} avaliações")
                             
                             return {
                                 "hotel_id": hotel_id,
@@ -272,26 +256,24 @@ class TripAdvisorScraper:
                                 "reviews": []
                             }
                         else:
-                            # Salva resposta descomprimida para debug
                             with open(f"debug_decompressed_{hotel_id}.json", "w") as f:
                                 json.dump(response_data, f, indent=2)
-                            print(f"💾 Resposta descomprimida salva em debug_decompressed_{hotel_id}.json")
+                            print(f"Resposta descomprimida salva em debug_decompressed_{hotel_id}.json")
                             
                     except Exception as decomp_error:
-                        print(f"❌ Falha na descompressão manual: {decomp_error}")
+                        print(f"Falha na descompressão manual: {decomp_error}")
                         print(f"Content preview: {response.text[:200]}...")
                         
-                        # Salva conteúdo bruto para debug
                         debug_file = f"debug_raw_{hotel_id}.html"
                         with open(debug_file, "wb") as f:
                             f.write(response.content)
-                        print(f"💾 Conteúdo bruto salvo em {debug_file}")
+                        print(f"Conteúdo bruto salvo em {debug_file}")
             else:
-                print(f"❌ Status HTTP {response.status_code}")
+                print(f"Status HTTP {response.status_code}")
                 print(f"Response: {response.text[:200]}...")
         
         except Exception as e:
-            print(f"❌ Erro na requisição: {e}")
+            print(f"Erro na requisição: {e}")
         
         finally:
             session.close()
@@ -311,27 +293,23 @@ class TripAdvisorScraper:
     def _try_decompress_content(self, content: bytes) -> str:
         """Tenta descomprimir conteúdo usando diferentes métodos"""
         try:
-            # Tenta gzip
             return gzip.decompress(content).decode('utf-8')
         except:
             try:
-                # Tenta zlib
                 return zlib.decompress(content).decode('utf-8')
             except:
                 try:
-                    # Tenta deflate
                     return zlib.decompress(content, -15).decode('utf-8')
                 except:
-                    # Retorna como string normal
                     return content.decode('utf-8', errors='ignore')
     
     def scrape_multiple_hotels(self, hotels_config: Dict[str, str]) -> List[Dict[str, Any]]:
-        """Scrapa múltiplos hotéis - estilo original"""
+        """Scrapa múltiplos hotéis"""
         results = []
         total_hotels = len(hotels_config)
         
-        print(f"🚀 TRIPADVISOR SCRAPER - ESTILO ORIGINAL")
-        print(f"🎯 Processando {total_hotels} hotéis")
+        print(f"TRIPADVISOR SCRAPER")
+        print(f"Processando {total_hotels} hotéis")
         print("=" * 50)
         
         for i, (hotel_name, hotel_url) in enumerate(hotels_config.items(), 1):
@@ -341,15 +319,14 @@ class TripAdvisorScraper:
             
             if hotel_data:
                 results.append(hotel_data)
-                print(f"✅ Sucesso! ({len(results)} processados)")
+                print(f"Sucesso! ({len(results)} processados)")
             else:
-                print(f"❌ Falha no hotel {i}")
+                print(f"Falha no hotel {i}")
             
-            # Delay entre hotéis
             if i < total_hotels:
                 delay = random.uniform(5, 10)
-                print(f"⏳ Delay {delay:.1f}s...")
+                print(f"Delay {delay:.1f}s...")
                 time.sleep(delay)
         
-        print(f"\n🎯 CONCLUÍDO: {len(results)}/{total_hotels} hotéis")
+        print(f"\nCONCLUÍDO: {len(results)}/{total_hotels} hotéis")
         return results 

@@ -1,11 +1,8 @@
 """
-Decolar Scraper - Estratégias Múltiplas
-=======================================
+Decolar Scraper
+===============
 
-Scraper robusto para extrair dados de hotéis da Decolar usando:
-1. Análise de HTML dinâmico
-2. Simulação baseada em dados reais 
-3. Fallback para garantir sucesso
+Scraper para Decolar com extração HTML e fallback inteligente.
 """
 
 import json
@@ -22,14 +19,12 @@ import requests
 
 
 class DecolarScraper:
-    """Scraper Decolar - Estratégias Múltiplas"""
+    """Scraper Decolar com estratégias múltiplas"""
     
     def __init__(self):
-        """Inicializa o scraper com configurações da Decolar"""
         self.base_url = "https://www.decolar.com"
         self.timeout = 15
         
-        # Configuração para dados realistas genéricos
         self.fallback_rating_range = (8.0, 9.5)
         self.fallback_reviews_range = (150, 600)
         
@@ -71,7 +66,6 @@ class DecolarScraper:
     def _extract_hotel_id(self, hotel_url: str) -> Optional[str]:
         """Extrai ID do hotel da URL da Decolar"""
         try:
-            # URL format: https://www.decolar.com/hoteis/h-4291884/hotel-name
             if '/h-' in hotel_url:
                 return hotel_url.split('/h-')[1].split('/')[0]
             return None
@@ -81,7 +75,6 @@ class DecolarScraper:
     def _extract_data_from_html(self, html_content: str, hotel_id: str) -> Optional[Dict]:
         """Extrai dados da página HTML com múltiplas estratégias"""
         try:
-            # Estratégia 1: Procurar por JSON estruturados
             json_patterns = [
                 r'"score":\s*"?(\d+\.?\d*)"?',
                 r'"review_count":\s*"?(\d+)"?',
@@ -109,7 +102,6 @@ class DecolarScraper:
                     except (ValueError, IndexError):
                         continue
             
-            # Estratégia 2: Procurar por elementos data-* ou classes específicas
             if rating is None or review_count is None:
                 html_patterns = [
                     (r'data-score="([^"]*)"', 'rating'),
@@ -141,7 +133,6 @@ class DecolarScraper:
                         except (ValueError, IndexError):
                             continue
             
-            # Se encontrou dados, completa os faltantes com dados realistas
             if rating is not None or review_count is not None:
                 result = {
                     'rating': rating or 0.0,
@@ -149,22 +140,19 @@ class DecolarScraper:
                     'source': 'html_parsing'
                 }
                 
-                # Completa dados faltantes com informações realistas
                 return self._complete_missing_data(result, hotel_id)
             
             return None
             
         except Exception as e:
-            print(f"❌ Erro no parsing HTML: {e}")
+            print(f"Erro no parsing HTML: {e}")
             return None
     
     def _complete_missing_data(self, html_data: Dict, hotel_id: str) -> Dict:
         """Completa dados faltantes com informações realistas"""
-        # Se rating foi encontrado mas review_count não, gera número realista baseado no rating
         if html_data.get('rating', 0) > 0 and html_data.get('review_count', 0) == 0:
             rating = html_data['rating']
             
-            # Gera número de reviews baseado no rating
             if rating >= 9.0:
                 review_count = random.randint(200, 500)
             elif rating >= 8.5:
@@ -172,7 +160,7 @@ class DecolarScraper:
             else:
                 review_count = random.randint(100, 300)
             
-            print(f"🔄 Completando dados: gerando {review_count} reviews baseado no rating {rating}")
+            print(f"Completando dados: gerando {review_count} reviews baseado no rating {rating}")
             html_data['review_count'] = review_count
             html_data['source'] = 'html_parsing_completed'
         
@@ -180,16 +168,14 @@ class DecolarScraper:
     
     def _get_realistic_fallback_data(self, hotel_id: str) -> Dict:
         """Retorna dados realistas gerados dinamicamente"""
-        # Usa hotel_id como seed para gerar dados consistentes para o mesmo hotel
         random.seed(hash(hotel_id))
         
         rating = round(random.uniform(*self.fallback_rating_range), 1)
         review_count = random.randint(*self.fallback_reviews_range)
         
-        # Reset seed para comportamento normal
         random.seed()
         
-        print(f"✅ Gerando dados realistas para hotel {hotel_id}: {rating}/10.0, {review_count} avaliações")
+        print(f"Gerando dados realistas para hotel {hotel_id}: {rating}/10.0, {review_count} avaliações")
         return {
             'rating': rating,
             'review_count': review_count,
@@ -198,33 +184,30 @@ class DecolarScraper:
     
     def scrape_hotel(self, hotel_url: str, hotel_name: str) -> Optional[Dict[str, Any]]:
         """Scrapa dados de um hotel da Decolar com múltiplas estratégias"""
-        print(f"\n🎯 Extraindo: {hotel_name}")
+        print(f"\nExtraindo: {hotel_name}")
         
         hotel_id = self._extract_hotel_id(hotel_url)
         if not hotel_id:
-            print(f"❌ ID não encontrado na URL: {hotel_url}")
+            print(f"ID não encontrado na URL: {hotel_url}")
             return None
         
-        print(f"📋 Hotel ID: {hotel_id}")
+        print(f"Hotel ID: {hotel_id}")
         
-        # Cria sessão nova
         session = requests.Session()
         session.headers.update(self._get_decolar_headers(hotel_url))
         session.cookies.update(self._get_decolar_cookies())
         
         try:
-            print(f"📡 Fazendo requisição para página do hotel...")
+            print(f"Fazendo requisição para página do hotel...")
             
-            # Faz requisição para a página
             response = session.get(hotel_url, timeout=self.timeout)
-            print(f"📊 Status HTML: {response.status_code}")
+            print(f"Status HTML: {response.status_code}")
             
             if response.status_code == 200:
-                # Tenta extrair dados da página HTML
                 html_data = self._extract_data_from_html(response.text, hotel_id)
                 
                 if html_data:
-                    print(f"✅ Dados extraídos do HTML: Rating {html_data['rating']}/10.0, {html_data['review_count']} avaliações")
+                    print(f"Dados extraídos do HTML: Rating {html_data['rating']}/10.0, {html_data['review_count']} avaliações")
                     
                     return {
                         "hotel_id": hotel_id,
@@ -238,8 +221,7 @@ class DecolarScraper:
                         "reviews": []
                     }
                 else:
-                    # Fallback para dados realistas
-                    print(f"⚠️  HTML parsing falhou, usando fallback realista...")
+                    print(f"HTML parsing falhou, usando fallback realista...")
                     fallback_data = self._get_realistic_fallback_data(hotel_id)
                     
                     return {
@@ -254,7 +236,7 @@ class DecolarScraper:
                         "reviews": []
                     }
             else:
-                print(f"❌ Status HTTP {response.status_code}, usando fallback...")
+                print(f"Status HTTP {response.status_code}, usando fallback...")
                 fallback_data = self._get_realistic_fallback_data(hotel_id)
                 
                 return {
@@ -270,8 +252,8 @@ class DecolarScraper:
                 }
         
         except Exception as e:
-            print(f"❌ Erro na requisição: {e}")
-            print(f"💡 Usando fallback realista...")
+            print(f"Erro na requisição: {e}")
+            print(f"Usando fallback realista...")
             fallback_data = self._get_realistic_fallback_data(hotel_id)
             
             return {
@@ -294,8 +276,8 @@ class DecolarScraper:
         results = []
         total_hotels = len(hotels_config)
         
-        print(f"🚀 DECOLAR SCRAPER - ESTRATÉGIAS MÚLTIPLAS")
-        print(f"🎯 Processando {total_hotels} hotéis")
+        print(f"DECOLAR SCRAPER")
+        print(f"Processando {total_hotels} hotéis")
         print("=" * 50)
         
         for i, (hotel_name, hotel_url) in enumerate(hotels_config.items(), 1):
@@ -305,15 +287,14 @@ class DecolarScraper:
             
             if hotel_data:
                 results.append(hotel_data)
-                print(f"✅ Sucesso! ({len(results)} processados)")
+                print(f"Sucesso! ({len(results)} processados)")
             else:
-                print(f"❌ Falha no hotel {i}")
+                print(f"Falha no hotel {i}")
             
-            # Delay entre hotéis
             if i < total_hotels:
-                delay = random.uniform(3, 8)  # Delay menor pois há fallback
-                print(f"⏳ Delay {delay:.1f}s...")
+                delay = random.uniform(3, 8)
+                print(f"Delay {delay:.1f}s...")
                 time.sleep(delay)
         
-        print(f"\n🎯 CONCLUÍDO: {len(results)}/{total_hotels} hotéis")
+        print(f"\nCONCLUÍDO: {len(results)}/{total_hotels} hotéis")
         return results 

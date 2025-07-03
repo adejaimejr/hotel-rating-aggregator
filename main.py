@@ -4,13 +4,8 @@
 Hotel Rating Aggregator
 =======================
 
-Main orchestrator that manages scrapers for multiple hotel sites:
-- TripAdvisor (fully functional)
-- Booking.com (fully functional)
-- Google Travel (in development) 
-- Decolar (fully functional)
-
-Each site generates its own JSON file with structured data.
+Sistema orquestrador para scraping multi-site de avaliações de hotéis.
+Suporta TripAdvisor, Booking.com, Google Places e Decolar.
 """
 
 import os
@@ -19,13 +14,10 @@ import argparse
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-# Importar scrapers de cada site
 from sites.tripadvisor.scraper import TripAdvisorScraper
 from sites.booking.scraper import BookingScraper
 from sites.google.scraper import GoogleTravelScraper
 from sites.decolar.scraper import DecolarScraper
-
-# Importar consolidador
 from consolidador import DataConsolidator
 
 
@@ -33,12 +25,6 @@ class HotelScrapingOrchestrator:
     """Orquestrador principal do sistema de scraping multi-sites"""
     
     def __init__(self, config_file: str = "config.env"):
-        """
-        Inicializa o orquestrador
-        
-        Args:
-            config_file: Caminho para o arquivo de configuração
-        """
         self.config_file = config_file
         self.config = self._load_config()
         self.scrapers = self._initialize_scrapers()
@@ -48,7 +34,7 @@ class HotelScrapingOrchestrator:
         config = {}
         
         if not os.path.exists(self.config_file):
-            print(f"❌ Arquivo de configuração não encontrado: {self.config_file}")
+            print(f"Arquivo de configuração não encontrado: {self.config_file}")
             return config
             
         try:
@@ -59,11 +45,11 @@ class HotelScrapingOrchestrator:
                         key, value = line.split('=', 1)
                         config[key.strip()] = value.strip()
                         
-            print(f"✅ Configurações carregadas: {len(config)} variáveis")
+            print(f"Configurações carregadas: {len(config)} variáveis")
             return config
             
         except Exception as e:
-            print(f"❌ Erro ao carregar configurações: {e}")
+            print(f"Erro ao carregar configurações: {e}")
             return {}
     
     def _initialize_scrapers(self) -> Dict[str, Any]:
@@ -76,63 +62,46 @@ class HotelScrapingOrchestrator:
         }
     
     def _get_hotels_config_for_site(self, site: str) -> Dict[str, str]:
-        """
-        Extrai configuração de hotéis para um site específico
-        
-        Args:
-            site: Nome do site (tripadvisor, booking, google, decolar)
-            
-        Returns:
-            Dict com {nome_hotel: url_hotel}
-        """
+        """Extrai configuração de hotéis para um site específico"""
         hotels_config = {}
         site_upper = site.upper()
         
-        # Configurações técnicas que devem ser ignoradas
         excluded_keys = {
             'GOOGLE_API_KEY', 'GOOGLE_SERVICE_ACCOUNT_JSON', 
             'GOOGLE_API_TIMEOUT', 'GOOGLE_API_DELAY'
         }
         
-        # Busca dinamicamente todos os hotéis configurados para o site
-        # Padrão: SITE_HOTEL_NAME=url
         for key, value in self.config.items():
             if (key.startswith(f"{site_upper}_") and 
                 not key.endswith("_ID") and 
+                not key.endswith("_NAME") and
                 key not in excluded_keys):
                 
-                # Extrai o nome do hotel da chave de configuração
                 hotel_key = key.replace(f"{site_upper}_", "")
                 
-                # Converte o nome da chave para formato de exibição
-                hotel_name = self._format_hotel_name(hotel_key)
+                # Verifica se existe uma variável _NAME específica para este hotel
+                name_key = f"{site_upper}_{hotel_key}_NAME"
+                if name_key in self.config:
+                    hotel_name = self.config[name_key]
+                else:
+                    # Fallback para o método antigo de gerar nome
+                    hotel_name = self._format_hotel_name(hotel_key)
                 
                 hotels_config[hotel_name] = value
         
         return hotels_config
     
     def _format_hotel_name(self, hotel_key: str) -> str:
-        """
-        Converte chave de configuração em nome de exibição do hotel
-        
-        Args:
-            hotel_key: Chave do hotel (ex: MARAGOGI_BRISA_EXCLUSIVE)
-            
-        Returns:
-            Nome formatado do hotel (ex: Maragogi Brisa Exclusive)
-        """
-        # Converte de UPPER_CASE para Title Case
+        """Converte chave de configuração em nome de exibição do hotel"""
         words = hotel_key.lower().replace('_', ' ').split()
         formatted_words = []
         
         for word in words:
-            # Palavras especiais que ficam em minúsculo
             if word in ['de', 'da', 'do', 'das', 'dos', 'e']:
                 formatted_words.append(word)
             else:
                 formatted_words.append(word.capitalize())
         
-        # Se não começar com "Hotel", adiciona se apropriado
         formatted_name = ' '.join(formatted_words)
         if not formatted_name.lower().startswith('hotel') and not any(formatted_name.lower().startswith(prefix) for prefix in ['maragogi', 'pousada', 'resort']):
             formatted_name = f"Hotel {formatted_name}"
@@ -140,23 +109,12 @@ class HotelScrapingOrchestrator:
         return formatted_name
     
     def _save_results_to_json(self, site: str, results: List[Dict[str, Any]]) -> str:
-        """
-        Salva resultados em arquivo JSON específico do site
-        
-        Args:
-            site: Nome do site
-            results: Lista com dados dos hotéis
-            
-        Returns:
-            Caminho do arquivo salvo
-        """
+        """Salva resultados em arquivo JSON específico do site"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"resultados/{site}_dados_{timestamp}.json"
         
-        # Garante que a pasta existe
         os.makedirs("resultados", exist_ok=True)
         
-        # Estrutura final do JSON
         output_data = {
             "metadata": {
                 "site": site,
@@ -171,63 +129,47 @@ class HotelScrapingOrchestrator:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(output_data, f, ensure_ascii=False, indent=2)
             
-            print(f"💾 Dados salvos: {filename}")
+            print(f"Dados salvos: {filename}")
             return filename
             
         except Exception as e:
-            print(f"❌ Erro ao salvar arquivo: {e}")
+            print(f"Erro ao salvar arquivo: {e}")
             return ""
     
     def scrape_site(self, site: str) -> Optional[str]:
-        """
-        Executa scraping para um site específico
-        
-        Args:
-            site: Nome do site a ser processado
-            
-        Returns:
-            Caminho do arquivo JSON gerado ou None se erro
-        """
+        """Executa scraping para um site específico"""
         if site not in self.scrapers:
-            print(f"❌ Site não suportado: {site}")
+            print(f"Site não suportado: {site}")
             return None
         
-        print(f"\n🚀 Iniciando scraping do {site.upper()}")
+        print(f"\nIniciando scraping do {site.upper()}")
         print("=" * 50)
         
-        # Obtém configuração de hotéis para o site
         hotels_config = self._get_hotels_config_for_site(site)
         
         if not hotels_config:
-            print(f"❌ Nenhum hotel configurado para {site}")
+            print(f"Nenhum hotel configurado para {site}")
             return None
         
-        print(f"🏨 Hotéis configurados para {site}: {len(hotels_config)}")
+        print(f"Hotéis configurados para {site}: {len(hotels_config)}")
         
-        # Executa scraping
         scraper = self.scrapers[site]
         results = scraper.scrape_multiple_hotels(hotels_config)
         
         if results:
-            # Salva resultados
             json_file = self._save_results_to_json(site, results)
-            print(f"✅ {site.upper()} concluído: {len(results)} hotéis processados")
+            print(f"{site.upper()} concluído: {len(results)} hotéis processados")
             return json_file
         else:
-            print(f"❌ Nenhum resultado obtido para {site}")
+            print(f"Nenhum resultado obtido para {site}")
             return None
     
     def scrape_all_sites(self) -> Dict[str, str]:
-        """
-        Executa scraping para todos os sites configurados
-        
-        Returns:
-            Dict com {site: caminho_arquivo_json}
-        """
+        """Executa scraping para todos os sites configurados"""
         results = {}
         available_sites = ['tripadvisor', 'booking', 'google', 'decolar']
         
-        print("🎯 INICIANDO SCRAPING MULTI-SITE")
+        print("INICIANDO SCRAPING MULTI-SITE")
         print("=" * 60)
         print(f"Sites disponíveis: {', '.join(available_sites)}")
         print(f"Total de hotéis por site: {len(self._get_hotels_config_for_site('tripadvisor'))}")
@@ -238,33 +180,26 @@ class HotelScrapingOrchestrator:
                 if json_file:
                     results[site] = json_file
                     
-                # Pequena pausa entre sites
-                if site != available_sites[-1]:  # Não espera no último
-                    print(f"⏳ Pausa entre sites...")
+                if site != available_sites[-1]:
+                    print(f"Pausa entre sites...")
                     import time
                     time.sleep(2)
                     
             except Exception as e:
-                print(f"❌ Erro ao processar {site}: {e}")
+                print(f"Erro ao processar {site}: {e}")
                 continue
         
-        # Consolida automaticamente os dados após scraping
+        # Consolida dados e limpa arquivos individuais
         if results:
             consolidated_file = self.consolidate_data()
-            # Remove arquivos individuais, mantém apenas o consolidado
             if consolidated_file:
                 self._cleanup_individual_files(results)
         
         return results
     
     def consolidate_data(self) -> Optional[str]:
-        """
-        Gera JSON consolidado com dados normalizados de todos os sites
-        
-        Returns:
-            Caminho do arquivo consolidado ou None se erro
-        """
-        print(f"\n🔄 INICIANDO CONSOLIDAÇÃO DE DADOS")
+        """Gera JSON consolidado com dados normalizados de todos os sites"""
+        print(f"\nINICIANDO CONSOLIDAÇÃO DE DADOS")
         print("=" * 60)
         
         try:
@@ -272,47 +207,44 @@ class HotelScrapingOrchestrator:
             consolidated_file = consolidator.generate_consolidated_json()
             
             if consolidated_file:
-                print(f"✅ Consolidação concluída: {consolidated_file}")
+                print(f"Consolidação concluída: {consolidated_file}")
                 return consolidated_file
             else:
-                print("❌ Erro na consolidação")
+                print("Erro na consolidação")
                 return None
                 
         except Exception as e:
-            print(f"❌ Erro durante consolidação: {e}")
+            print(f"Erro durante consolidação: {e}")
             return None
     
     def _cleanup_individual_files(self, results: Dict[str, str]) -> None:
         """Remove arquivos individuais após consolidação"""
         import os
         
-        print("🧹 Limpando arquivos individuais...")
+        print("Limpando arquivos individuais...")
         for site, file_path in results.items():
             try:
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                    print(f"   ❌ Removido: {file_path}")
+                    print(f"   Removido: {file_path}")
             except Exception as e:
-                print(f"   ⚠️ Erro ao remover {file_path}: {e}")
+                print(f"   Erro ao remover {file_path}: {e}")
     
     def show_status(self):
         """Mostra status das configurações e scrapers"""
-        print("📊 STATUS DO SISTEMA")
+        print("STATUS DO SISTEMA")
         print("=" * 40)
         
-        # Status das configurações
-        print(f"📁 Arquivo de config: {self.config_file}")
-        print(f"⚙️  Configurações carregadas: {len(self.config)}")
+        print(f"Arquivo de config: {self.config_file}")
+        print(f"Configurações carregadas: {len(self.config)}")
         
-        # Status dos scrapers
-        print(f"\n🤖 Scrapers disponíveis:")
+        print(f"\nScrapers disponíveis:")
         for site, scraper in self.scrapers.items():
             implemented = getattr(scraper, 'implemented', True)
-            status = "✅ Funcional" if implemented else "🚧 Em desenvolvimento"
+            status = "Funcional" if implemented else "Em desenvolvimento"
             print(f"   {site.capitalize()}: {status}")
         
-        # Status dos hotéis configurados
-        print(f"\n🏨 Hotéis configurados por site:")
+        print(f"\nHotéis configurados por site:")
         for site in self.scrapers.keys():
             hotels = self._get_hotels_config_for_site(site)
             print(f"   {site.capitalize()}: {len(hotels)} hotéis")
@@ -366,47 +298,41 @@ Exemplos de uso:
     
     args = parser.parse_args()
     
-    # Inicializa orquestrador
     orchestrator = HotelScrapingOrchestrator(args.config)
     
-    # Executa ação solicitada
     if args.status:
         orchestrator.show_status()
         
     elif args.consolidar:
-        # Consolida dados existentes
         consolidated_file = orchestrator.consolidate_data()
         if consolidated_file:
-            print(f"\n🎯 Arquivo consolidado gerado: {consolidated_file}")
+            print(f"\nArquivo consolidado gerado: {consolidated_file}")
         
     elif args.site:
-        # Executa site específico
         json_file = orchestrator.scrape_site(args.site)
         if json_file:
-            print(f"\n🎯 Arquivo gerado: {json_file}")
+            print(f"\nArquivo gerado: {json_file}")
             
     elif args.sites:
-        # Executa múltiplos sites específicos
         results = {}
         for site in args.sites:
             json_file = orchestrator.scrape_site(site)
             if json_file:
                 results[site] = json_file
         
-        print(f"\n🎯 Arquivos gerados: {len(results)}")
+        print(f"\nArquivos gerados: {len(results)}")
         for site, file_path in results.items():
             print(f"   {site.capitalize()}: {file_path}")
             
     else:
-        # Executa todos os sites (padrão)
         results = orchestrator.scrape_all_sites()
         
-        print(f"\n🎯 SCRAPING CONCLUÍDO")
+        print(f"\nSCRAPING CONCLUÍDO")
         print("=" * 30)
         print(f"Sites processados: {len(results)}")
         
         for site, file_path in results.items():
-            print(f"✅ {site.capitalize()}: {file_path}")
+            print(f"{site.capitalize()}: {file_path}")
 
 
 if __name__ == "__main__":

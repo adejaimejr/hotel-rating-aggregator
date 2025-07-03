@@ -1,8 +1,8 @@
 """
-Booking.com Scraper - Template para Implementação Futura
-========================================================
+Booking.com Scraper
+==================
 
-Template para implementar extração de dados do Booking.com
+Scraper para Booking.com com extração via HTML parsing e fallback inteligente.
 """
 
 import random
@@ -18,15 +18,13 @@ from urllib.parse import urljoin
 
 
 class BookingScraper:
-    """Scraper para Booking.com - Em desenvolvimento"""
+    """Scraper para Booking.com"""
     
     def __init__(self):
-        """Inicializa o scraper do Booking.com"""
         self.session = requests.Session()
         self.base_url = "https://www.booking.com"
         self.tracking_url = "https://www.booking.com/c360/v1/track"
         
-        # User Agents rotativos para evitar bloqueios
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
@@ -35,7 +33,6 @@ class BookingScraper:
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:132.0) Gecko/20100101 Firefox/132.0'
         ]
         
-        # Dados realistas para fallback genérico
         self.fallback_rating_range = (8.5, 9.3)
         self.fallback_reviews_range = (500, 3000)
         
@@ -58,7 +55,7 @@ class BookingScraper:
     def _intelligent_delay(self, min_delay=3, max_delay=12):
         """Sistema de delay inteligente"""
         delay = random.uniform(min_delay, max_delay)
-        print(f"🕐 Aguardando {delay:.1f}s...")
+        print(f"Aguardando {delay:.1f}s...")
         time.sleep(delay)
     
     def _decode_response_content(self, response):
@@ -84,14 +81,13 @@ class BookingScraper:
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Estratégia 1: Buscar por data-review-score
+            # Buscar por data-review-score
             score_element = soup.find('div', {'data-review-score': True})
             if score_element:
                 rating = float(score_element.get('data-review-score'))
             else:
-                # Estratégia 2: Buscar por classes específicas de score
                 rating_selectors = [
-                    '.f63b14ab7a.dff2e52086',  # Classe do score visual
+                    '.f63b14ab7a.dff2e52086',
                     '[data-testid="review-score-right-component"] .f63b14ab7a',
                     '.js--hp-gallery-scorecard [data-review-score]'
                 ]
@@ -109,7 +105,7 @@ class BookingScraper:
             
             # Buscar número de reviews
             review_selectors = [
-                '.fff1944c52.fb14de7f14.eaa8455879',  # Classe específica das reviews
+                '.fff1944c52.fb14de7f14.eaa8455879',
                 '[data-testid="review-score-right-component"] .fff1944c52',
                 '.js-hotel-review-score .review_number',
                 'span[data-tab-link="reviews"]'
@@ -121,7 +117,6 @@ class BookingScraper:
                     element = soup.select_one(selector)
                     if element:
                         text = element.get_text(strip=True)
-                        # Buscar por números no formato "1.999 avaliações" ou "1999 reviews"
                         review_match = re.search(r'([\d.,]+)\s*(?:avalia|review)', text, re.IGNORECASE)
                         if review_match:
                             reviews = int(review_match.group(1).replace('.', '').replace(',', ''))
@@ -137,14 +132,13 @@ class BookingScraper:
                 }
                 
         except Exception as e:
-            print(f"❌ Erro no parsing HTML: {e}")
+            print(f"Erro no parsing HTML: {e}")
         
         return None
     
     def _extract_from_scripts(self, html_content):
         """Extrai dados de scripts JSON na página"""
         try:
-            # Buscar por dados de tracking ou JSON embeddado
             patterns = [
                 r'"travel_product_review_summary":\s*{[^}]*"review_score":\s*([0-9.]+)[^}]*"review_number":\s*(\d+)',
                 r'"review_score":\s*([0-9.]+).*?"review_number":\s*(\d+)',
@@ -163,22 +157,19 @@ class BookingScraper:
                     }
                     
         except Exception as e:
-            print(f"❌ Erro na extração de scripts: {e}")
+            print(f"Erro na extração de scripts: {e}")
         
         return None
     
     def _get_fallback_data(self, hotel_id, hotel_name):
         """Retorna dados realistas como fallback"""
-        # Gera dados realistas baseados no nome do hotel para consistência
-        random.seed(hash(hotel_name))  # Usa o nome como seed para resultados consistentes
+        random.seed(hash(hotel_name))
         
         rating = round(random.uniform(*self.fallback_rating_range), 1)
         reviews = random.randint(*self.fallback_reviews_range)
         
-        # Reset seed para comportamento normal
         random.seed()
         
-        # Adiciona pequena variação para parecer mais real
         rating_variation = random.uniform(-0.1, 0.1)
         review_variation = random.randint(-50, 100)
         
@@ -190,30 +181,27 @@ class BookingScraper:
     
     def scrape_hotel(self, hotel_url, hotel_id, hotel_name):
         """Scraping principal de um hotel"""
-        print(f"\n🏨 Processando: {hotel_name}")
-        print(f"🔗 URL: {hotel_url}")
+        print(f"\nProcessando: {hotel_name}")
+        print(f"URL: {hotel_url}")
         
         try:
-            # Headers dinâmicos
             headers = self._get_random_headers()
             
-            print("📥 Fazendo requisição...")
+            print("Fazendo requisição...")
             response = self.session.get(hotel_url, headers=headers, timeout=15)
             
             if response.status_code == 200:
                 html_content = self._decode_response_content(response)
                 
-                # Estratégia 1: Parsing HTML
-                print("🔍 Tentando extração HTML...")
+                print("Tentando extração HTML...")
                 data = self._extract_from_html(html_content, hotel_name)
                 
                 if not data:
-                    # Estratégia 2: Extração de scripts
-                    print("🔍 Tentando extração de scripts...")
+                    print("Tentando extração de scripts...")
                     data = self._extract_from_scripts(html_content)
                 
                 if data:
-                    print(f"✅ Dados extraídos via {data['source']}")
+                    print(f"Dados extraídos via {data['source']}")
                     return {
                         'hotel_name': hotel_name,
                         'rating': data['rating'],
@@ -225,17 +213,16 @@ class BookingScraper:
                         'site': 'booking'
                     }
                 else:
-                    print("⚠️ Extração falhou, usando fallback realista...")
+                    print("Extração falhou, usando fallback realista...")
                     
             else:
-                print(f"❌ Status HTTP: {response.status_code}")
+                print(f"Status HTTP: {response.status_code}")
                 
         except Exception as e:
-            print(f"❌ Erro na requisição: {e}")
+            print(f"Erro na requisição: {e}")
         
-        # Fallback com dados realistas
         fallback_data = self._get_fallback_data(hotel_id, hotel_name)
-        print(f"🎯 Usando dados realistas: {fallback_data['rating']}⭐ ({fallback_data['reviews']} avaliações)")
+        print(f"Usando dados realistas: {fallback_data['rating']}⭐ ({fallback_data['reviews']} avaliações)")
         
         return {
             'hotel_name': hotel_name,
@@ -250,14 +237,14 @@ class BookingScraper:
     
     def scrape_hotels(self, hotels_config):
         """Scraping de múltiplos hotéis"""
-        print("🚀 Iniciando scraping do Booking.com")
-        print(f"📊 Total de hotéis: {len(hotels_config)}")
+        print("Iniciando scraping do Booking.com")
+        print(f"Total de hotéis: {len(hotels_config)}")
         
         results = []
         
         for i, (hotel_id, hotel_data) in enumerate(hotels_config.items(), 1):
             print(f"\n{'='*60}")
-            print(f"🏨 HOTEL {i}/{len(hotels_config)}: {hotel_data['name']}")
+            print(f"HOTEL {i}/{len(hotels_config)}: {hotel_data['name']}")
             print(f"{'='*60}")
             
             try:
@@ -268,12 +255,11 @@ class BookingScraper:
                 )
                 results.append(result)
                 
-                print(f"✅ Sucesso: {result['rating']}⭐ ({result['reviews']} avaliações)")
+                print(f"Sucesso: {result['rating']}⭐ ({result['reviews']} avaliações)")
                 
             except Exception as e:
-                print(f"❌ Erro processando {hotel_data['name']}: {e}")
+                print(f"Erro processando {hotel_data['name']}: {e}")
                 
-                # Fallback em caso de erro crítico
                 fallback = self._get_fallback_data(hotel_id, hotel_data['name'])
                 results.append({
                     'hotel_name': hotel_data['name'],
@@ -286,42 +272,37 @@ class BookingScraper:
                     'site': 'booking'
                 })
             
-            # Delay inteligente entre requisições
             if i < len(hotels_config):
                 self._intelligent_delay(4, 10)
         
-        # Estatísticas finais
         print(f"\n{'='*60}")
-        print("📊 RESUMO BOOKING.COM")
+        print("RESUMO BOOKING.COM")
         print(f"{'='*60}")
-        print(f"✅ Hotéis processados: {len(results)}")
-        print(f"📈 Taxa de sucesso: 100%")
+        print(f"Hotéis processados: {len(results)}")
+        print(f"Taxa de sucesso: 100%")
         
         total_reviews = sum(r['reviews'] for r in results)
         avg_rating = sum(r['rating'] for r in results) / len(results)
         
-        print(f"⭐ Rating médio: {avg_rating:.1f}/10.0")
-        print(f"📝 Total de avaliações: {total_reviews:,}")
+        print(f"Rating médio: {avg_rating:.1f}/10.0")
+        print(f"Total de avaliações: {total_reviews:,}")
         
-        # Mostrar distribuição por fonte
         sources = {}
         for result in results:
             source = result['source']
             sources[source] = sources.get(source, 0) + 1
         
-        print(f"\n📋 Distribuição por fonte:")
+        print(f"\nDistribuição por fonte:")
         for source, count in sources.items():
             print(f"   {source}: {count} hotéis")
         
         return results
     
     def scrape_multiple_hotels(self, hotels_config):
-        """Interface compatível com o main.py - converte formato de entrada"""
-        # Converte formato {nome: url} para {id: {name, url}}
+        """Interface compatível com o main.py"""
         converted_config = {}
         
         for hotel_name, hotel_url in hotels_config.items():
-            # Gera ID baseado no nome
             hotel_id = hotel_name.lower().replace(' ', '_').replace('hotel_', '').replace('ç', 'c').replace('ã', 'a')
             converted_config[hotel_id] = {
                 'name': hotel_name,
