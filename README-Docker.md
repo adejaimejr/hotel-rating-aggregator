@@ -9,14 +9,17 @@ Este diretório contém todos os arquivos necessários para executar o Hotel Rat
 ```
 docker/
 ├── Dockerfile              # Imagem Docker do sistema
-├── docker-compose.yml      # Orquestração dos serviços
-├── .env-template           # Template alternativo (opcional)
+├── docker-compose.yml      # Orquestração dos serviços  
+├── docker-compose-swarm.yml # Docker Swarm específico
+├── portainer-stack.yml     # Stack para Portainer (NOVO)
+├── PORTAINER-INSTRUCTIONS.md # Instruções Portainer (NOVO)
 ├── setup-docker.sh        # Script de setup automatizado
 ├── test-docker.sh         # Script de teste
 └── README-Docker.md       # Esta documentação
 
 ../config.env               # Arquivo de configuração principal (compartilhado)
 ../config.env-EXEMPLO       # Template do projeto
+../requirements.txt         # Dependências atualizadas (beautifulsoup4, lxml)
 ```
 
 ## 🚀 Quick Start
@@ -54,6 +57,17 @@ docker-compose ps
 docker-compose logs -f
 ```
 
+### 4. Deploy via Portainer (Alternativa)
+```bash
+# Para usar Portainer Stack
+mkdir -p /swarm-hyperscale/stacks/hotel-rating/{resultados,logs}
+cp config.env /swarm-hyperscale/stacks/hotel-rating/
+chown -R 1000:1000 /swarm-hyperscale/stacks/hotel-rating/
+
+# No Portainer: Stacks → Add Stack → Cole docker/portainer-stack.yml
+# Nome do stack: hotel-rating-aggregator
+```
+
 ## 🔧 Configuração
 
 ### Arquivo Principal: `../config.env`
@@ -76,6 +90,8 @@ BOOKING_HOTEL_001=https://...
 - ✅ **Mesmo arquivo config.env** para Docker e execução local
 - ✅ **Mesma estrutura de dados** e resultados
 - ✅ **Não modifica nenhum código existente**
+- ✅ **Dependências atualizadas**: beautifulsoup4, lxml incluídos
+- ✅ **Portainer Stack pronto**: deploy em 1 clique
 
 ## 📊 Comandos Docker
 

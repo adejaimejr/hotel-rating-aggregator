@@ -56,7 +56,11 @@ hotel-rating-aggregator/
 - **FastAPI**: Modern web framework for REST API
 - **Requests**: HTTP client with session support
 - **BeautifulSoup4**: Advanced HTML parsing
-- **JSON**: Structured data processing
+- **lxml**: Fast XML/HTML parser
+- **python-dotenv**: Environment variable management
+- **JSON5**: Enhanced JSON parsing
+- **Pydantic**: Data validation and settings
+- **Uvicorn**: ASGI server
 - **Docker**: Containerization and orchestration
 - **Docker Swarm**: Production deployment
 - **Regex**: Advanced text parsing
@@ -111,7 +115,7 @@ hotel-rating-aggregator/
 # Python 3.8 or higher
 python --version
 
-# Install dependencies
+# Install dependencies (includes beautifulsoup4, lxml, and all required packages)
 pip install -r requirements.txt
 ```
 
@@ -178,6 +182,18 @@ docker-compose logs -f
 # API will be available at http://localhost:8000
 ```
 
+### Usage via Portainer Stack
+```bash
+# For Portainer deployments, use the pre-configured stack
+# 1. Access Portainer → Stacks → Add Stack
+# 2. Name: hotel-rating-aggregator
+# 3. Copy content from docker/portainer-stack.yml
+# 4. Deploy the stack
+
+# Files will be persisted in /swarm-hyperscale/stacks/hotel-rating/
+# API will be available at http://localhost:8000
+```
+
 ### Configuration
 Copy `config.env-EXEMPLO` to `config.env` and configure:
 - Hotel URLs per platform
@@ -226,10 +242,12 @@ curl -X GET "http://localhost:8000/scraper/result/JOB_ID" \
 
 ### Docker Features
 - **Optimized Image**: Python 3.11-slim with non-root user
-- **Docker Swarm**: Production-ready
+- **Docker Swarm**: Production-ready with Portainer support
 - **Persistent Volumes**: Data and logs preserved
-- **Health Check**: Automatic monitoring
+- **Health Check**: Automatic monitoring (every 30s)
 - **Flexible Configuration**: Uses same `config.env`
+- **Portainer Stack**: Ready-to-deploy stack configuration
+- **Auto-restart**: Failure recovery with backoff policy
 
 ### Docker Setup
 ```bash
@@ -243,6 +261,11 @@ docker volume create hotel_rating_logs
 docker network create --driver overlay --attachable network_swarm_public
 docker-compose build
 docker-compose up -d
+
+# Portainer Stack setup
+mkdir -p /swarm-hyperscale/stacks/hotel-rating/{resultados,logs}
+cp config.env /swarm-hyperscale/stacks/hotel-rating/
+# Then deploy docker/portainer-stack.yml via Portainer UI
 ```
 
 ### Compatibility

@@ -22,8 +22,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# Carrega variáveis de ambiente
-load_dotenv("config.env")
+# Carrega variáveis de ambiente (apenas se arquivo existir)
+if os.path.exists("config.env"):
+    load_dotenv("config.env")
+else:
+    print("Arquivo config.env não encontrado, usando variáveis de ambiente do sistema")
 
 # =============================================================================
 # CONFIGURAÇÃO DA API

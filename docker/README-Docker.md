@@ -10,9 +10,11 @@ Este diretório contém todos os arquivos necessários para executar o Hotel Rat
 docker/
 ├── Dockerfile              # Imagem Docker do sistema
 ├── docker-compose.yml      # Orquestração dos serviços
-├── .env-template           # Template de variáveis de ambiente
-├── .env                    # Variáveis de ambiente (criar do template)
+├── docker-compose-swarm.yml # Docker Swarm específico
+├── portainer-stack.yml     # Stack para Portainer (PRONTO)
+├── PORTAINER-INSTRUCTIONS.md # Instruções detalhadas Portainer
 ├── setup-docker.sh        # Script de setup automatizado
+├── test-docker.sh         # Script de teste automatizado
 └── README-Docker.md       # Esta documentação
 ```
 
@@ -41,6 +43,34 @@ docker-compose up -d
 docker-compose ps
 docker-compose logs -f
 ```
+
+## 🌟 Deploy via Portainer (Recomendado para Produção)
+
+### Setup para Portainer
+```bash
+# Criar estrutura de diretórios
+mkdir -p /swarm-hyperscale/stacks/hotel-rating/{resultados,logs}
+
+# Copiar configuração
+cp ../config.env /swarm-hyperscale/stacks/hotel-rating/
+
+# Ajustar permissões
+chown -R 1000:1000 /swarm-hyperscale/stacks/hotel-rating/
+chmod 755 /swarm-hyperscale/stacks/hotel-rating/{resultados,logs}
+
+# Deploy via Portainer UI:
+# 1. Stacks → Add Stack
+# 2. Nome: hotel-rating-aggregator  
+# 3. Cole conteúdo de portainer-stack.yml
+# 4. Deploy
+```
+
+### Características do Portainer Stack
+- ✅ **Volumes persistentes**: `/swarm-hyperscale/stacks/hotel-rating/`
+- ✅ **Health checks automáticos**: A cada 30s
+- ✅ **Auto-restart**: Política de falha configurada
+- ✅ **Recursos limitados**: CPU 0.5-2 cores, RAM 1-4GB
+- ✅ **Rede overlay**: `network_swarm_public`
 
 ## 🔧 Configuração
 
