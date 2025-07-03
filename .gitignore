@@ -93,7 +93,7 @@ resultados/
 #*.json
 
 # Configuration with sensitive data
-#config.env
+config.env
 
 # Spyder project settings
 .spyderproject
