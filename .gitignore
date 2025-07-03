@@ -139,3 +139,4 @@ temp_*
 backup_* 
 # Docker environment files
 docker/*.local
+# Arquivo config.env confirmado como ignorado pelo git
