@@ -1,0 +1,46 @@
+
+services:
+  hotel-rating-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    networks:
+      - network_swarm_public
+    ports:
+      - "8000:8000"
+    volumes:
+      - hotel_rating_results:/app/resultados
+      - hotel_rating_logs:/app/logs
+    env_file:
+      - ../config.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4096M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+
+volumes:
+  hotel_rating_results:
+    external: true
+    name: hotel_rating_results
+  hotel_rating_logs:
+    external: true
+    name: hotel_rating_logs
+
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public

@@ -90,7 +90,7 @@ venv.bak/
 
 # Results and outputs
 resultados/
-#*.json
+*.json
 
 # Configuration with sensitive data
 config.env
@@ -137,3 +137,5 @@ teste_*.py
 debug_*
 temp_*
 backup_* 
+# Docker environment files
+docker/*.local

@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker/
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Project specific
+debug_*.html
+payload-*.md
+teste_*.py
+*.bak
+*.tmp
+debug_*
+temp_*
+backup_*
+
+# Documentation
+README*.md
+*.md
+
+# Logs
+*.log
+logs/
